@@ -29,6 +29,7 @@ var _input_queue: Array = []
 var _main_thread_input_buffer: Array = []
 var _pipe_reset_complete: bool = true
 var _connection_allowed: bool = false
+var _process_restart_pending: bool = false
 # Non-mouse packets that have been written to the FIFO but not yet acked by the
 # shim. Stored under _mutex. On reset, prepended back to _input_queue for replay.
 var _pending_acks: Array = []
@@ -84,12 +85,27 @@ func hard_reset_connection():
 		_pipe_reset_complete = false
 		_mutex.unlock()
 
+func prepare_for_process_restart():
+	# Keep the current pipes alive long enough to deliver Ctrl+Q, but prevent the
+	# pipe thread from reopening the old FIFO if the process exits mid-sequence.
+	if _mutex:
+		_mutex.lock()
+		_process_restart_pending = true
+		_mutex.unlock()
+
 func hold_connection():
 	print("Video Streamer: Holding connection attempts...")
 	if _mutex:
 		_mutex.lock()
 		_reset_requested = true
 		_connection_allowed = false
+		if _process_restart_pending:
+			# Shutdown key packets belong only to the process being terminated.
+			# Never replay them into the replacement PICO-8 session.
+			_input_queue.clear()
+			_main_thread_input_buffer.clear()
+			_pending_acks.clear()
+			_frames_since_ack_advance = 0
 		
 		# If the thread hasn't even connected to the pipes yet, 
 		# we don't need to wait for it to "release" anything.
@@ -107,6 +123,7 @@ func allow_connection():
 	print("Releasing connection hold...")
 	if _mutex:
 		_mutex.lock()
+		_process_restart_pending = false
 		_connection_allowed = true
 		_mutex.unlock()
 
@@ -175,6 +192,10 @@ func _ready() -> void:
 	var audio_btn = get_node_or_null("Arranger/kbanchor/AudioBtn")
 	if audio_btn:
 		audio_btn.pressed.connect(_on_audio_btn_pressed)
+
+	var splore_btn = get_node_or_null("Arranger/kbanchor/SploreBtn")
+	if splore_btn:
+		splore_btn.pressed.connect(_on_splore_btn_pressed)
 		
 	KBMan.subscribe(_on_external_keyboard_change)
 	
@@ -413,6 +434,8 @@ func _thread_function():
 					_input_queue = combined
 					_reset_requested = true
 					_pipe_reset_complete = false
+					if _process_restart_pending:
+						_connection_allowed = false
 					_mutex.unlock()
 				print("Pipe Thread: Input write failed — requeued ", unsent.size(), " packet(s), requesting reset")
 
@@ -1051,6 +1074,17 @@ func _on_audio_btn_pressed():
 	send_key(SDL_SCANCODE_M, false, false, KMOD_LCTRL)
 	# Send CTRL Up
 	send_key(SDL_SCANCODE_LCTRL, false, false, 0)
+
+func _on_splore_btn_pressed():
+	var splore_btn = get_node_or_null("Arranger/kbanchor/SploreBtn")
+	var run_cmd = get_node_or_null("runcmd")
+	if run_cmd and run_cmd.has_method("restart_into_splore"):
+		var accepted: bool = run_cmd.restart_into_splore()
+		if accepted and splore_btn:
+			splore_btn.disabled = true
+			await get_tree().create_timer(15.0).timeout
+			if is_instance_valid(splore_btn):
+				splore_btn.disabled = false
 
 
 var quit_overlay: Control

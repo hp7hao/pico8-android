@@ -12,6 +12,8 @@ var restart_state: RestartState = RestartState.IDLE
 var pending_restart_path: String = ""
 var state_timer: int = 0
 var process_check_timer: int = 0
+const SPLORE_RESTART_COOLDOWN_MS = 15000
+var last_splore_restart_request_ms: int = -SPLORE_RESTART_COOLDOWN_MS
 var last_received_data = ""
 var last_received_time = 0
 
@@ -76,6 +78,20 @@ func restart_pico8() -> void:
 	print("Restarting PICO-8 (Triggering State Machine)...")
 	pending_restart_path = "" # Empty path means reload default/Splore
 	restart_state = RestartState.REQUESTED
+
+func restart_into_splore() -> bool:
+	var now = Time.get_ticks_msec()
+	if restart_state != RestartState.IDLE or now - last_splore_restart_request_ms < SPLORE_RESTART_COOLDOWN_MS:
+		print("Splore restart already active or cooling down; ignoring duplicate request.")
+		return false
+
+	last_splore_restart_request_ms = now
+	print("Restarting PICO-8 directly into Splore...")
+	# The launch path recognises this virtual target and forces -splore without
+	# changing the persistent start_with_splore preference.
+	pending_restart_path = "splore.p8"
+	restart_state = RestartState.REQUESTED
+	return true
 
 func _on_applinks_data_received(data: String) -> void:
 	print("Runtime AppLink received: ", data)
@@ -370,6 +386,7 @@ func _process(_delta: float) -> void:
 			# Step 1: Send Ctrl Down
 			if PicoVideoStreamer.instance:
 				print("Sending Graceful Quit (Ctrl+Q) Sequence...")
+				PicoVideoStreamer.instance.prepare_for_process_restart()
 				# Key 224 (Ctrl), Down=True
 				PicoVideoStreamer.instance.send_key(224, true, false, 0) # No mod needed for mod key itself
 				restart_state = RestartState.SENDING_CTRL_DOWN
@@ -397,10 +414,20 @@ func _process(_delta: float) -> void:
 				state_timer = Time.get_ticks_msec()
 
 		RestartState.SENDING_Q_UP:
-			# Step 4: Wait 50ms, then Ctrl Up
+			# Step 4: Wait 50ms, then Ctrl Up.
 			if (Time.get_ticks_msec() - state_timer) > 50:
 				if PicoVideoStreamer.instance:
 					PicoVideoStreamer.instance.send_key(224, false, false, 0)
+				restart_state = RestartState.SENDING_CTRL_UP
+				state_timer = Time.get_ticks_msec()
+
+		RestartState.SENDING_CTRL_UP:
+			# Give the pipe thread time to deliver the final key-up before holding
+			# reconnection. Without this hold it can block reopening the old FIFO
+			# after PICO-8 exits, before the replacement FIFO is created.
+			if (Time.get_ticks_msec() - state_timer) > 100:
+				if PicoVideoStreamer.instance:
+					PicoVideoStreamer.instance.hold_connection()
 				restart_state = RestartState.WAITING_FOR_EXIT
 				state_timer = Time.get_ticks_msec()
 

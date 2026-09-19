@@ -23,6 +23,7 @@
 [ext_resource type="Texture2D" uid="uid://11n44wksyvn" path="res://assets/keyboard.svg" id="22_b1qrp"]
 [ext_resource type="Texture2D" uid="uid://shpx84pg158k" path="res://assets/pico8_logo_vector.png" id="23_1u8w0"]
 [ext_resource type="Texture2D" uid="uid://bjtcvcurk0xpg" path="res://assets/volume_up.svg" id="24_facbu"]
+[ext_resource type="Texture2D" path="res://assets/splore.svg" id="25_splore"]
 [ext_resource type="Script" uid="uid://3yarkysfetgu" path="res://kb_toggler.gd" id="37_come4"]
 [ext_resource type="PackedScene" uid="uid://bgklhpsaac82q" path="res://dpad.tscn" id="41_0cp0l"]
 [ext_resource type="Script" uid="uid://c7rts7fcblaav" path="res://run_pico_cmd.gd" id="41_4lmeg"]
@@ -253,6 +254,19 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 10
 theme_override_styles/focus = SubResource("StyleBoxEmpty_d13ii")
 icon = ExtResource("24_facbu")
+expand_icon = true
+script = ExtResource("171_repo")
+
+[node name="SploreBtn" type="Button" parent="Arranger/kbanchor" unique_id=1898426201]
+unique_name_in_owner = true
+offset_left = -20.0
+offset_top = -136.0
+offset_right = -2.0
+offset_bottom = -118.0
+focus_mode = 0
+theme_override_styles/focus = SubResource("StyleBoxEmpty_d13ii")
+tooltip_text = "Open Splore"
+icon = ExtResource("25_splore")
 expand_icon = true
 script = ExtResource("171_repo")
 
