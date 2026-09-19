@@ -25,6 +25,11 @@
 [ext_resource type="Texture2D" uid="uid://bjtcvcurk0xpg" path="res://assets/volume_up.svg" id="24_facbu"]
 [ext_resource type="Texture2D" path="res://assets/splore.svg" id="25_splore"]
 [ext_resource type="Texture2D" path="res://assets/projects.svg" id="26_projects"]
+[ext_resource type="Texture2D" path="res://assets/editor_escape.svg" id="27_editor_escape"]
+[ext_resource type="Texture2D" path="res://assets/editor_code.svg" id="28_editor_code"]
+[ext_resource type="Texture2D" path="res://assets/editor_sprite.svg" id="29_editor_sprite"]
+[ext_resource type="Texture2D" path="res://assets/editor_map.svg" id="30_editor_map"]
+[ext_resource type="Texture2D" path="res://assets/editor_music.svg" id="31_editor_music"]
 [ext_resource type="Script" uid="uid://3yarkysfetgu" path="res://kb_toggler.gd" id="37_come4"]
 [ext_resource type="PackedScene" uid="uid://bgklhpsaac82q" path="res://dpad.tscn" id="41_0cp0l"]
 [ext_resource type="Script" uid="uid://c7rts7fcblaav" path="res://run_pico_cmd.gd" id="41_4lmeg"]
@@ -174,6 +179,33 @@ corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_editor_quick"]
+content_margin_left = 1.0
+content_margin_top = 1.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0.08, 0.08, 0.09, 0.96)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_editor_quick_pressed"]
+content_margin_left = 1.0
+content_margin_top = 1.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0.32, 0.27, 0.52, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.7, 0.67, 1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
 [node name="Main" type="Node2D" unique_id=689770846 node_paths=PackedStringArray("loading", "display", "displayContainer")]
 script = ExtResource("1_ig7tw")
@@ -1568,9 +1600,9 @@ metadata/_edit_use_anchors_ = true
 [node name="Pause" parent="Arranger/kbanchor/kb_gaming" unique_id=491652354 instance=ExtResource("20_82xsv")]
 layout_mode = 0
 offset_left = 53.0
-offset_top = 18.0
+offset_top = 10.0
 offset_right = 75.0
-offset_bottom = 28.0
+offset_bottom = 22.0
 scale = Vector2(0.95, 0.95)
 texture = ExtResource("49_menu_norm")
 key_id = "P"
@@ -1581,11 +1613,80 @@ texture_normal = ExtResource("49_menu_norm")
 texture_pressed = ExtResource("50_menu_press")
 metadata/_edit_use_anchors_ = true
 
+[node name="EditorQuickActions" type="HBoxContainer" parent="Arranger/kbanchor/kb_gaming"]
+visible = false
+layout_mode = 0
+offset_left = 33.0
+offset_top = 25.0
+offset_right = 94.0
+offset_bottom = 42.0
+theme_override_constants/separation = 1
+
+[node name="Escape" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
+custom_minimum_size = Vector2(11, 17)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+tooltip_text = "Editor"
+icon = ExtResource("27_editor_escape")
+expand_icon = true
+
+[node name="Code" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
+custom_minimum_size = Vector2(11, 17)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+tooltip_text = "Code"
+icon = ExtResource("28_editor_code")
+expand_icon = true
+
+[node name="Sprite" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
+custom_minimum_size = Vector2(11, 17)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+tooltip_text = "Sprite"
+icon = ExtResource("29_editor_sprite")
+expand_icon = true
+
+[node name="Map" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
+custom_minimum_size = Vector2(11, 17)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+tooltip_text = "Map"
+icon = ExtResource("30_editor_map")
+expand_icon = true
+
+[node name="Music" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
+custom_minimum_size = Vector2(11, 17)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+tooltip_text = "Music"
+icon = ExtResource("31_editor_music")
+expand_icon = true
+
 [node name="O" parent="Arranger/kbanchor/kb_gaming" unique_id=2134662063 instance=ExtResource("20_82xsv")]
 layout_mode = 0
-offset_left = 120.0
+offset_left = 128.0
 offset_top = 10.0
-offset_right = 142.0
+offset_right = 150.0
 offset_bottom = 32.0
 scale = Vector2(0.95, 0.95)
 texture = ExtResource("45_o_norm")
@@ -1600,9 +1701,9 @@ metadata/_edit_use_anchors_ = true
 
 [node name="X" parent="Arranger/kbanchor/kb_gaming" unique_id=1932826476 instance=ExtResource("20_82xsv")]
 layout_mode = 0
-offset_left = 95.0
+offset_left = 103.0
 offset_top = 23.0
-offset_right = 117.0
+offset_right = 125.0
 offset_bottom = 45.0
 scale = Vector2(0.95, 0.95)
 texture = ExtResource("43_x_norm")
@@ -1617,9 +1718,9 @@ metadata/_edit_use_anchors_ = true
 
 [node name="dpad" parent="Arranger/kbanchor/kb_gaming" unique_id=827209010 instance=ExtResource("41_0cp0l")]
 layout_mode = 0
-offset_left = -12.0
+offset_left = -22.0
 offset_top = 2.0
-offset_right = 32.0
+offset_right = 22.0
 offset_bottom = 46.0
 scale = Vector2(0.95, 0.95)
 expand_mode = 1

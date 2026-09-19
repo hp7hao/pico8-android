@@ -73,6 +73,7 @@ var project_browser_scene = preload("res://project_browser.tscn")
 
 
 var selected_control: CanvasItem = null
+var _editor_shortcut_active: bool = false
 func _on_intent_session_started():
 	print("Video Streamer: Intent Session Started (Controller Mapping Updated)")
 	is_intent_session = true
@@ -201,6 +202,14 @@ func _ready() -> void:
 	var projects_btn = get_node_or_null("Arranger/kbanchor/ProjectsBtn")
 	if projects_btn:
 		projects_btn.pressed.connect(_on_projects_btn_pressed)
+
+	var editor_actions = get_node_or_null("Arranger/kbanchor/kb_gaming/EditorQuickActions")
+	if editor_actions:
+		editor_actions.get_node("Escape").pressed.connect(_on_editor_quick_action.bind("escape"))
+		editor_actions.get_node("Code").pressed.connect(_on_editor_quick_action.bind("code"))
+		editor_actions.get_node("Sprite").pressed.connect(_on_editor_quick_action.bind("sprite"))
+		editor_actions.get_node("Map").pressed.connect(_on_editor_quick_action.bind("map"))
+		editor_actions.get_node("Music").pressed.connect(_on_editor_quick_action.bind("music"))
 		
 	KBMan.subscribe(_on_external_keyboard_change)
 	
@@ -644,6 +653,10 @@ var last_mouse_state = [0, 0, 0]
 var synched = false
 
 func _process(delta: float) -> void:
+	var editor_actions = get_node_or_null("Arranger/kbanchor/kb_gaming/EditorQuickActions")
+	if editor_actions:
+		editor_actions.visible = current_navstate != 0 and (current_navstate & 0x08) == 0
+
 	# 1. POLL FOR NEW FRAMES (Pull Method)
 	var latest_ready = -1
 	if _mutex:
@@ -1114,6 +1127,72 @@ func _on_projects_btn_pressed():
 		return
 	var browser = project_browser_scene.instantiate()
 	get_tree().root.add_child(browser)
+
+func _on_editor_quick_action(action: String) -> void:
+	if _editor_shortcut_active or current_navstate == 0 or (current_navstate & 0x08) != 0:
+		return
+	_editor_shortcut_active = true
+
+	if action == "escape":
+		await _tap_pico_key("Escape")
+		_editor_shortcut_active = false
+		return
+
+	if (current_navstate & 0x01) == 0:
+		await _tap_pico_key("Escape")
+		# From command mode one Escape enters the editor. From a running cart,
+		# PICO-8 may first return to command mode, which needs one more Escape.
+		await get_tree().create_timer(0.2).timeout
+		if (current_navstate & 0x10) != 0:
+			await _tap_pico_key("Escape")
+
+	var deadline = Time.get_ticks_msec() + 6000
+	while Time.get_ticks_msec() < deadline and (current_navstate & 0x01) == 0:
+		await get_tree().create_timer(0.05).timeout
+	if (current_navstate & 0x01) == 0:
+		push_error("Editor quick action timed out: " + action)
+		_editor_shortcut_active = false
+		return
+	await get_tree().create_timer(0.2).timeout
+
+	var tab_positions = {
+		"code": Vector2i(85, 4),
+		"sprite": Vector2i(95, 4),
+		"map": Vector2i(104, 4),
+		"music": Vector2i(122, 4),
+	}
+	if tab_positions.has(action):
+		print("Activating PICO-8 editor tab: ", action)
+		await _send_pico_ui_click(tab_positions[action])
+	_editor_shortcut_active = false
+
+func _tap_pico_key(key_id: String) -> void:
+	vkb_setstate(key_id, true)
+	await get_tree().create_timer(0.08).timeout
+	vkb_setstate(key_id, false)
+
+func _send_pico_ui_click(position: Vector2i) -> void:
+	if not _mutex:
+		return
+	# Keep button-down visible for several PICO-8 polls. Enqueuing down and up
+	# together can be consumed before SDL_GetMouseState observes the press.
+	# Move both cursor models as well so the regular per-frame input projection
+	# does not immediately overwrite this synthetic click with the old position.
+	virtual_cursor_pos = Vector2(position)
+	current_screen_pos = position
+	current_mouse_mask = 1
+	_mutex.lock()
+	_input_queue.append([PIDOT_EVENT_MOUSEEV, position.x, position.y, 1, 0, 0, 0, 0])
+	_mutex.unlock()
+	last_mouse_state = [position.x, position.y, 1]
+	await get_tree().create_timer(0.12).timeout
+	if not _mutex:
+		return
+	current_mouse_mask = 0
+	_mutex.lock()
+	_input_queue.append([PIDOT_EVENT_MOUSEEV, position.x, position.y, 0, 0, 0, 0, 0])
+	_mutex.unlock()
+	last_mouse_state = [position.x, position.y, 0]
 
 
 var quit_overlay: Control
