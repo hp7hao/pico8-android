@@ -1093,13 +1093,21 @@ func _on_audio_btn_pressed():
 func _on_splore_btn_pressed():
 	var splore_btn = get_node_or_null("Arranger/kbanchor/SploreBtn")
 	var run_cmd = get_node_or_null("runcmd")
-	if run_cmd and run_cmd.has_method("restart_into_splore"):
-		var accepted: bool = run_cmd.restart_into_splore()
-		if accepted and splore_btn:
-			splore_btn.disabled = true
-			await get_tree().create_timer(15.0).timeout
-			if is_instance_valid(splore_btn):
-				splore_btn.disabled = false
+	if not run_cmd:
+		return
+
+	var in_splore = (current_navstate & 0x08) != 0
+	var accepted = false
+	if in_splore and run_cmd.has_method("restart_into_command_prompt"):
+		accepted = run_cmd.restart_into_command_prompt()
+	elif not in_splore and run_cmd.has_method("restart_into_splore"):
+		accepted = run_cmd.restart_into_splore()
+
+	if accepted and splore_btn:
+		splore_btn.disabled = true
+		await get_tree().create_timer(15.0).timeout
+		if is_instance_valid(splore_btn):
+			splore_btn.disabled = false
 
 func _on_projects_btn_pressed():
 	if get_tree().root.has_node("ProjectBrowser"):

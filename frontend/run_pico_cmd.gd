@@ -13,8 +13,8 @@ var pending_restart_path: String = ""
 var pending_open_in_editor: bool = false
 var state_timer: int = 0
 var process_check_timer: int = 0
-const SPLORE_RESTART_COOLDOWN_MS = 15000
-var last_splore_restart_request_ms: int = -SPLORE_RESTART_COOLDOWN_MS
+const MODE_SWITCH_COOLDOWN_MS = 15000
+var last_mode_switch_request_ms: int = -MODE_SWITCH_COOLDOWN_MS
 var last_received_data = ""
 var last_received_time = 0
 
@@ -95,16 +95,22 @@ func open_project_in_editor(project_path: String) -> bool:
 	return true
 
 func restart_into_splore() -> bool:
+	return _request_mode_restart("splore.p8", "Splore")
+
+func restart_into_command_prompt() -> bool:
+	return _request_mode_restart("command.p8", "command prompt")
+
+func _request_mode_restart(virtual_target: String, mode_label: String) -> bool:
 	var now = Time.get_ticks_msec()
-	if restart_state != RestartState.IDLE or now - last_splore_restart_request_ms < SPLORE_RESTART_COOLDOWN_MS:
-		print("Splore restart already active or cooling down; ignoring duplicate request.")
+	if restart_state != RestartState.IDLE or now - last_mode_switch_request_ms < MODE_SWITCH_COOLDOWN_MS:
+		print("PICO-8 mode switch already active or cooling down; ignoring duplicate request.")
 		return false
 
-	last_splore_restart_request_ms = now
-	print("Restarting PICO-8 directly into Splore...")
-	# The launch path recognises this virtual target and forces -splore without
-	# changing the persistent start_with_splore preference.
-	pending_restart_path = "splore.p8"
+	last_mode_switch_request_ms = now
+	print("Restarting PICO-8 directly into ", mode_label, "...")
+	# Virtual targets force a runtime mode without changing the persistent
+	# start_with_splore preference.
+	pending_restart_path = virtual_target
 	pending_open_in_editor = false
 	restart_state = RestartState.REQUESTED
 	return true
@@ -165,8 +171,11 @@ func _launch_pico8(target_path: String, open_in_editor: bool = false) -> void:
 	else:
 		var fname_lower = target_path.get_file().to_lower()
 		if fname_lower == "splore.p8" or fname_lower == "splore.p8.png":
-			# Special "user asked for splore" filename — force splore regardless of setting.
+			# Force Splore regardless of the persistent startup setting.
 			run_arg = " -splore"
+		elif fname_lower == "command.p8" or fname_lower == "command.p8.png":
+			# Force the default command prompt regardless of the startup setting.
+			run_arg = ""
 		elif target_path.begins_with(PicoBootManager.PUBLIC_FOLDER):
 			var pico_path = target_path.replace(PicoBootManager.PUBLIC_FOLDER, "/home/public")
 			run_arg = " -run " + _escape_filename_for_shell(pico_path)

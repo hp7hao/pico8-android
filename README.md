@@ -39,7 +39,7 @@ This fork introduces several enhancements to improve the experience on Android d
 *   **Controller Support:** Full support for external game controllers.
 *   **Android Handheld Support:** Tested and verified on devices like the **RG Cube**.
 *   **Virtual Keyboard:** Access the Android keyboard at any time by sliding up from the bottom of the screen.
-*   **Direct Splore Button:** Relaunch the current session directly into Splore through a graceful quit with bounded force-cleanup, without changing the cold-start preference.
+*   **Splore / Command Toggle:** Relaunch only the PICO-8 child between Splore and the default command prompt through a graceful quit with bounded force-cleanup, without changing the cold-start preference.
 *   **My Projects Browser:** Open a read-only native filesystem tree for directories and editable `.p8` cartridges under `/Documents/pico8/data/carts`. Browsing suspends the current PICO-8 child; closing resumes it, while selecting a confirmed project relaunches only PICO-8 and opens that source cartridge in the editor without changing the cold-start preference.
 *   **Options Menu:** Access the side menu for settings and options by sliding from the left side of the screen or pressing the **Left Shoulder (L1/LB)** button on a controller.
 *   **Frontend Integration:** Compatible with frontends like **ES-DE** to launch PICO-8 games directly or access Splore (see v0.0.7 release notes for setup instructions; pending official integration from the ES-DE team). **Beacon Launcher** support added since v1.0.0. Please check the [wiki pages](https://github.com/Macs75/pico8-android/wiki/Frontends-Integration) for the setup.
