@@ -69,6 +69,7 @@ var _icon_volume_up = preload("res://assets/volume_up.svg")
 var _icon_volume_off = preload("res://assets/volume_off.svg")
 var _icon_fill_keyboard = preload("res://assets/keyboard.svg")
 var _icon_goma_controls = preload("res://assets/dpad+ab.svg")
+var project_browser_scene = preload("res://project_browser.tscn")
 
 
 var selected_control: CanvasItem = null
@@ -196,6 +197,10 @@ func _ready() -> void:
 	var splore_btn = get_node_or_null("Arranger/kbanchor/SploreBtn")
 	if splore_btn:
 		splore_btn.pressed.connect(_on_splore_btn_pressed)
+
+	var projects_btn = get_node_or_null("Arranger/kbanchor/ProjectsBtn")
+	if projects_btn:
+		projects_btn.pressed.connect(_on_projects_btn_pressed)
 		
 	KBMan.subscribe(_on_external_keyboard_change)
 	
@@ -1085,6 +1090,12 @@ func _on_splore_btn_pressed():
 			await get_tree().create_timer(15.0).timeout
 			if is_instance_valid(splore_btn):
 				splore_btn.disabled = false
+
+func _on_projects_btn_pressed():
+	if get_tree().root.has_node("ProjectBrowser"):
+		return
+	var browser = project_browser_scene.instantiate()
+	get_tree().root.add_child(browser)
 
 
 var quit_overlay: Control

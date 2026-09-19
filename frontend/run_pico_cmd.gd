@@ -10,6 +10,7 @@ var pico_pid = null
 enum RestartState {IDLE, REQUESTED, SENDING_CTRL_DOWN, SENDING_Q_DOWN, SENDING_Q_UP, SENDING_CTRL_UP, WAITING_FOR_EXIT, RELAUNCHING}
 var restart_state: RestartState = RestartState.IDLE
 var pending_restart_path: String = ""
+var pending_open_in_editor: bool = false
 var state_timer: int = 0
 var process_check_timer: int = 0
 const SPLORE_RESTART_COOLDOWN_MS = 15000
@@ -77,7 +78,21 @@ func restart_pico8() -> void:
 
 	print("Restarting PICO-8 (Triggering State Machine)...")
 	pending_restart_path = "" # Empty path means reload default/Splore
+	pending_open_in_editor = false
 	restart_state = RestartState.REQUESTED
+
+func open_project_in_editor(project_path: String) -> bool:
+	var normalized = project_path.simplify_path()
+	var project_root = PicoBootManager.PUBLIC_FOLDER + "/data/carts"
+	if restart_state != RestartState.IDLE:
+		return false
+	if not normalized.begins_with(project_root + "/") or not normalized.to_lower().ends_with(".p8") or not FileAccess.file_exists(normalized):
+		return false
+	pending_restart_path = normalized
+	pending_open_in_editor = true
+	restart_state = RestartState.REQUESTED
+	print("Editor project switch requested: ", normalized)
+	return true
 
 func restart_into_splore() -> bool:
 	var now = Time.get_ticks_msec()
@@ -90,6 +105,7 @@ func restart_into_splore() -> bool:
 	# The launch path recognises this virtual target and forces -splore without
 	# changing the persistent start_with_splore preference.
 	pending_restart_path = "splore.p8"
+	pending_open_in_editor = false
 	restart_state = RestartState.REQUESTED
 	return true
 
@@ -119,10 +135,11 @@ func _on_applinks_data_received(data: String) -> void:
 	# Decode the new data using our robust logic
 	# Start the Async Restart Sequence
 	pending_restart_path = await _decode_and_fix_path(data)
+	pending_open_in_editor = false
 	restart_state = RestartState.REQUESTED
 	print("Restart Sequence Initiated for: ", pending_restart_path)
 
-func _launch_pico8(target_path: String) -> void:
+func _launch_pico8(target_path: String, open_in_editor: bool = false) -> void:
 	# Ensure clean slate (in case force kill was needed or cold boot)
 	if pico_pid:
 		_kill_all_pico_processes()
@@ -150,7 +167,11 @@ func _launch_pico8(target_path: String) -> void:
 			# Special "user asked for splore" filename — force splore regardless of setting.
 			run_arg = " -splore"
 		elif target_path.begins_with(PicoBootManager.PUBLIC_FOLDER):
-			run_arg = " -run " + target_path.replace(PicoBootManager.PUBLIC_FOLDER, "/home/public")
+			var pico_path = target_path.replace(PicoBootManager.PUBLIC_FOLDER, "/home/public")
+			if open_in_editor:
+				run_arg = " " + _escape_filename_for_shell(pico_path)
+			else:
+				run_arg = " -run " + _escape_filename_for_shell(pico_path)
 		else:
 			# External path: bind the parent directory to /home/custom_mount
 			# properly escape single quotes for shell context: ' becomes '\''
@@ -461,8 +482,9 @@ func _complete_restart() -> void:
 	# static first frame. Keep the wrapper alive but let native teardown settle.
 	await get_tree().create_timer(0.75).timeout
 
-	print("Launching new PICO-8 instance: ", pending_restart_path)
-	_launch_pico8(pending_restart_path)
+	print("Launching new PICO-8 instance: ", pending_restart_path, " editor=", pending_open_in_editor)
+	_launch_pico8(pending_restart_path, pending_open_in_editor)
+	pending_open_in_editor = false
 	restart_state = RestartState.IDLE
 
 func _notification(what: int) -> void:
