@@ -317,6 +317,16 @@ func _thread_function():
 		if do_reset:
 			synched = false
 			buffer.clear()
+			# Invalidate the old process's ring-buffer projection. Otherwise a
+			# replacement process whose first frame lands in the same slot as the
+			# previous read index can remain visually frozen until a later redraw.
+			if _mutex:
+				_mutex.lock()
+				_ready_index = -1
+				_read_index = -1
+				_write_head = 0
+				fps_frame_count = 0
+				_mutex.unlock()
 
 			# Force clean reconnection of pipes (fixes Restart with FIFO)
 			if _applinks_plugin:

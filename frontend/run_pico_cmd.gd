@@ -155,6 +155,7 @@ func _launch_pico8(target_path: String, open_in_editor: bool = false) -> void:
 	var extra_bind_export = ""
 	var root_bind_export = ""
 	var bbs_bind_export = ""
+	var editor_path_arg = ""
 
 
 	if target_path.is_empty():
@@ -168,10 +169,9 @@ func _launch_pico8(target_path: String, open_in_editor: bool = false) -> void:
 			run_arg = " -splore"
 		elif target_path.begins_with(PicoBootManager.PUBLIC_FOLDER):
 			var pico_path = target_path.replace(PicoBootManager.PUBLIC_FOLDER, "/home/public")
+			run_arg = " -run " + _escape_filename_for_shell(pico_path)
 			if open_in_editor:
-				run_arg = " " + _escape_filename_for_shell(pico_path)
-			else:
-				run_arg = " -run " + _escape_filename_for_shell(pico_path)
+				editor_path_arg = pico_path
 		else:
 			# External path: bind the parent directory to /home/custom_mount
 			# properly escape single quotes for shell context: ' becomes '\''
@@ -227,7 +227,7 @@ func _launch_pico8(target_path: String, open_in_editor: bool = false) -> void:
 			else:
 				run_arg += " -root_path /home/public/data/carts"
 
-	# Finalize export string
+	# Finalize export string.
 	if not extra_bind_export.is_empty():
 		extra_bind_export = "export PROOT_EXTRA_BIND='" + extra_bind_export + "'; "
 	
@@ -241,12 +241,15 @@ func _launch_pico8(target_path: String, open_in_editor: bool = false) -> void:
 		# IMPORTANT: We guard with 'test -p' to ONLY write to existing FIFOs.
 		# Without the guard, '>' would create a *regular file* if the FIFO doesn't exist yet,
 		# which would then cause the subsequent 'mkfifo' command to fail.
-		print("URL Handler: Sending asynchronous 'poke' signals to unblock pipes...")
+		print("URL Handler: Sending bounded 'poke' signals to unblock pipes...")
+		# Run these synchronously. A detached poke can outlive the old FIFO, then
+		# write `poke\n` into its replacement and leave the Java reader at EOF
+		# before the new PICO-8 shim opens it.
 		var poke_cmd = "cd " + pkg_path + "; " + \
-					  "(test -p tmp/pico8.vid && timeout 0.2s sh -c 'echo poke > tmp/pico8.vid' || true) & " + \
-					  "(test -p tmp/pico8.in && timeout 0.2s sh -c 'cat tmp/pico8.in > /dev/null' || true) & " + \
-					  "(test -p tmp/xdgopen && timeout 0.2s sh -c 'echo poke > tmp/xdgopen' || true) &"
-		OS.create_process(PicoBootManager.BIN_PATH + "/sh", ["-c", poke_cmd])
+					  "(test -p tmp/pico8.vid && timeout 0.2s sh -c 'echo poke > tmp/pico8.vid' || true); " + \
+					  "(test -p tmp/pico8.in && timeout 0.2s sh -c 'cat tmp/pico8.in > /dev/null' || true); " + \
+					  "(test -p tmp/xdgopen && timeout 0.2s sh -c 'echo poke > tmp/xdgopen' || true)"
+		OS.execute(PicoBootManager.BIN_PATH + "/sh", ["-c", poke_cmd], [])
 
 		# 3. Sync Wait (Ensure thread has actually stopped/closed)
 		print("Waiting for Video Streamer to release pipes...")
@@ -288,6 +291,27 @@ func _launch_pico8(target_path: String, open_in_editor: bool = false) -> void:
 		["-c", cmdline]
 	)
 	print("executing as pid " + str(pico_pid) + "\n" + cmdline)
+	if open_in_editor and not editor_path_arg.is_empty():
+		_enter_editor_after_run.call_deferred(editor_path_arg)
+
+func _enter_editor_after_run(project_path: String) -> void:
+	var deadline = Time.get_ticks_msec() + 6000
+	while Time.get_ticks_msec() < deadline:
+		if PicoVideoStreamer.instance and (PicoVideoStreamer.instance.current_navstate & 0x02) != 0:
+			break
+		await get_tree().create_timer(0.1).timeout
+	if not PicoVideoStreamer.instance or (PicoVideoStreamer.instance.current_navstate & 0x02) == 0:
+		push_error("Project started but did not reach running state: " + project_path)
+		return
+
+	# PICO-8's documented route from a running cart to its editor is Escape to
+	# stop, then Escape once more to enter editing mode.
+	for i in range(2):
+		PicoVideoStreamer.instance.vkb_setstate("Escape", true)
+		await get_tree().create_timer(0.08).timeout
+		PicoVideoStreamer.instance.vkb_setstate("Escape", false)
+		await get_tree().create_timer(0.25).timeout
+	print("Opened project in PICO-8 editor: ", project_path)
 
 
 func _escape_filename_for_shell(path: String) -> String:
