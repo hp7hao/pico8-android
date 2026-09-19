@@ -30,6 +30,7 @@ The `/Documents/pico8/data` folder is automatically populated during the first e
 *   **Cross-Platform Compatibility:** Because the structure is identical, if you have an existing PICO-8 installation on another platform, you can copy your `carts`, favorites, and save data directly into this folder.
 *   **Migration:** simply copy your files into the corresponding subfolders in `/Documents/pico8/data` to carry over your progress and library to Android.
 *   **Synchronization:** You can use external tools like **Syncthing** to keep this folder in sync with your other devices (PC, raspberry pi, etc.). Please refer to the specific documentation of your chosen tool for setup details.
+*   **Nested Folder Compatibility:** The preload shim restores POSIX `.` and `..` directory entries when Android shared storage omits them, so PICO-8 commands such as `cd demos`, `ls`, and nested `save` work against `/Documents/pico8/data/carts`.
 
 
 ## 🌟 Key Features (Fork)
@@ -80,7 +81,7 @@ The repeatable debug-build path is:
    scripts/build-android-debug.sh /path/to/pico8-frontend-debug.apk
    ```
 
-The helper copies the frontend into a temporary directory, installs the matching `android_source.zip` there, and exports the APK without rewriting tracked Godot import metadata. The Android export preset uses minimum SDK 28, matching the documented Android 9 baseline.
+The helper copies the frontend into a temporary directory, overlays the tracked `shim/picoshim.so` and `shim/package/start_pico_proot.sh` onto the recovered bootstrap archive, installs the matching `android_source.zip`, and exports the APK without rewriting tracked Godot import metadata. The Android export preset uses minimum SDK 28, matching the documented Android 9 baseline.
 
 The default audio backend is SLES. On affected Android vendor stacks—including Titan 2, where the required legacy `libgralloc_extra_sys.so` dependency is excluded from the app linker namespace—the app automatically uses the existing TCP-stream backend instead; otherwise the SLES PulseAudio module loads but produces no speaker output.
 

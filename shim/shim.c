@@ -11,8 +11,138 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <SDL2/SDL.h>
+#include <dirent.h>
+#include <pthread.h>
 #include <link.h> // For dl_iterate_phdr
+#include <SDL2/SDL.h>
+
+// Android's shared-storage FUSE layer omits the synthetic `.` and `..`
+// directory entries. PICO-8 expects normal POSIX enumeration and treats a
+// directory whose first entry is a cartridge as invalid. Restore the missing
+// entries for mounted user roots, while passing through filesystems that
+// already provide them.
+typedef struct {
+    DIR *dir;
+    int stage;
+    bool has_pending;
+    struct dirent pending;
+    struct dirent synthetic;
+} compat_dir_state;
+static compat_dir_state compat_dirs[32];
+static pthread_mutex_t compat_dirs_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static compat_dir_state *compat_dir_for(DIR *dir) {
+    compat_dir_state *result = NULL;
+    pthread_mutex_lock(&compat_dirs_mutex);
+    for (int i = 0; i < 32; i++) if (compat_dirs[i].dir == dir) {
+        result = &compat_dirs[i];
+        break;
+    }
+    pthread_mutex_unlock(&compat_dirs_mutex);
+    return result;
+}
+
+static bool compat_user_root_path(const char *path) {
+    const char *public_root = "/home/public";
+    const char *custom_root = "/home/custom_mount";
+    size_t public_len = strlen(public_root);
+    size_t custom_len = strlen(custom_root);
+    return (strncmp(path, public_root, public_len) == 0 &&
+            (path[public_len] == 0 || path[public_len] == '/')) ||
+           (strncmp(path, custom_root, custom_len) == 0 &&
+            (path[custom_len] == 0 || path[custom_len] == '/'));
+}
+
+static struct dirent *compat_dot_entry(compat_dir_state *state, const char *name) {
+    memset(&state->synthetic, 0, sizeof(state->synthetic));
+    state->synthetic.d_ino = 1;
+    state->synthetic.d_reclen = sizeof(state->synthetic);
+    state->synthetic.d_type = DT_DIR;
+    snprintf(state->synthetic.d_name, sizeof(state->synthetic.d_name), "%s", name);
+    return &state->synthetic;
+}
+
+DIR *opendir(const char *name) {
+    static DIR *(*realf)(const char *) = NULL;
+    if (!realf) realf = dlsym(RTLD_NEXT, "opendir");
+    DIR *result = realf(name);
+    if (result && compat_user_root_path(name)) {
+        pthread_mutex_lock(&compat_dirs_mutex);
+        for (int i = 0; i < 32; i++) if (!compat_dirs[i].dir) {
+            memset(&compat_dirs[i], 0, sizeof(compat_dirs[i]));
+            compat_dirs[i].dir = result;
+            break;
+        }
+        pthread_mutex_unlock(&compat_dirs_mutex);
+    }
+    return result;
+}
+
+struct dirent *readdir(DIR *dir) {
+    static struct dirent *(*realf)(DIR *) = NULL;
+    if (!realf) realf = dlsym(RTLD_NEXT, "readdir");
+    compat_dir_state *state = compat_dir_for(dir);
+    if (!state) return realf(dir);
+
+    if (state->stage == 0) {
+        errno = 0;
+        struct dirent *first = realf(dir);
+        int first_errno = errno;
+        if (!first && first_errno != 0) {
+            state->stage = 3;
+            errno = first_errno;
+            return NULL;
+        }
+        if (first && strcmp(first->d_name, ".") == 0) {
+            state->stage = 3;
+            return first;
+        }
+        if (first) {
+            memcpy(&state->pending, first, sizeof(state->pending));
+            state->has_pending = true;
+        }
+        // If the filesystem supplied `..` but omitted `.`, return the saved
+        // `..` next instead of synthesizing a duplicate.
+        state->stage = first && strcmp(first->d_name, "..") == 0 ? 2 : 1;
+        return compat_dot_entry(state, ".");
+    }
+    if (state->stage == 1) {
+        state->stage = 2;
+        return compat_dot_entry(state, "..");
+    }
+    if (state->stage == 2) {
+        state->stage = 3;
+        if (state->has_pending) return &state->pending;
+        errno = 0;
+        return NULL;
+    }
+    return realf(dir);
+}
+
+void rewinddir(DIR *dir) {
+    static void (*realf)(DIR *) = NULL;
+    if (!realf) realf = dlsym(RTLD_NEXT, "rewinddir");
+    realf(dir);
+    compat_dir_state *state = compat_dir_for(dir);
+    if (state) {
+        state->stage = 0;
+        state->has_pending = false;
+    }
+}
+
+int closedir(DIR *dir) {
+    static int (*realf)(DIR *) = NULL;
+    if (!realf) realf = dlsym(RTLD_NEXT, "closedir");
+    pthread_mutex_lock(&compat_dirs_mutex);
+    compat_dir_state *state = NULL;
+    for (int i = 0; i < 32; i++) if (compat_dirs[i].dir == dir) {
+        state = &compat_dirs[i];
+        break;
+    }
+    if (state) memset(state, 0, sizeof(*state));
+    pthread_mutex_unlock(&compat_dirs_mutex);
+    return realf(dir);
+}
 
 #define FINDSDL(VAR, NAME) \
     if (!(VAR)) { \

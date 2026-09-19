@@ -31,6 +31,19 @@ trap 'rm -rf "$work_root"' EXIT
 mkdir -p "$work_root/frontend/android/build"
 rsync -a --exclude='.godot/' --exclude='android/' --exclude='*.apk' \
   "$repo_root/frontend/" "$work_root/frontend/"
+
+# package.dat is recovered from an upstream APK, but first-party bootstrap
+# fixes live in this repository. Overlay them in the isolated build tree so a
+# stale recovered archive cannot silently discard the current shim/runtime.
+bootstrap_tree="$work_root/bootstrap"
+mkdir -p "$bootstrap_tree"
+tar --no-same-owner -xzf "$work_root/frontend/package.dat" -C "$bootstrap_tree"
+install -m 755 "$repo_root/shim/picoshim.so" \
+  "$bootstrap_tree/package/rootfs/home/pico/picoshim.so"
+install -m 755 "$repo_root/shim/package/start_pico_proot.sh" \
+  "$bootstrap_tree/package/start_pico_proot.sh"
+tar -C "$bootstrap_tree" -czf "$work_root/frontend/package.dat" package
+
 unzip -q "$android_source" -d "$work_root/frontend/android/build"
 printf '%s\n' "$version" > "$work_root/frontend/android/.build_version"
 
