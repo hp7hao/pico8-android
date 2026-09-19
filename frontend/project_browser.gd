@@ -173,9 +173,6 @@ func _entry_gui_input(event: InputEvent, button: Button, item: Dictionary) -> vo
 			focus_path = parent_path
 		_refresh()
 		get_viewport().set_input_as_handled()
-	elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-		button.pressed.emit()
-		get_viewport().set_input_as_handled()
 
 func _confirm_open_project(project_path: String) -> void:
 	var dialog: Control
