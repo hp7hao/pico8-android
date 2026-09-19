@@ -30,6 +30,7 @@
 [ext_resource type="Texture2D" path="res://assets/editor_sprite.svg" id="29_editor_sprite"]
 [ext_resource type="Texture2D" path="res://assets/editor_map.svg" id="30_editor_map"]
 [ext_resource type="Texture2D" path="res://assets/editor_music.svg" id="31_editor_music"]
+[ext_resource type="Texture2D" path="res://assets/editor_sfx.svg" id="32_editor_sfx"]
 [ext_resource type="Script" uid="uid://3yarkysfetgu" path="res://kb_toggler.gd" id="37_come4"]
 [ext_resource type="PackedScene" uid="uid://bgklhpsaac82q" path="res://dpad.tscn" id="41_0cp0l"]
 [ext_resource type="Script" uid="uid://c7rts7fcblaav" path="res://run_pico_cmd.gd" id="41_4lmeg"]
@@ -1616,14 +1617,14 @@ metadata/_edit_use_anchors_ = true
 [node name="EditorQuickActions" type="HBoxContainer" parent="Arranger/kbanchor/kb_gaming"]
 visible = false
 layout_mode = 0
-offset_left = 33.0
+offset_left = 30.0
 offset_top = 25.0
-offset_right = 94.0
+offset_right = 95.0
 offset_bottom = 42.0
 theme_override_constants/separation = 1
 
 [node name="Escape" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
-custom_minimum_size = Vector2(11, 17)
+custom_minimum_size = Vector2(10, 17)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
@@ -1635,7 +1636,7 @@ icon = ExtResource("27_editor_escape")
 expand_icon = true
 
 [node name="Code" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
-custom_minimum_size = Vector2(11, 17)
+custom_minimum_size = Vector2(10, 17)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
@@ -1647,7 +1648,7 @@ icon = ExtResource("28_editor_code")
 expand_icon = true
 
 [node name="Sprite" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
-custom_minimum_size = Vector2(11, 17)
+custom_minimum_size = Vector2(10, 17)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
@@ -1659,7 +1660,7 @@ icon = ExtResource("29_editor_sprite")
 expand_icon = true
 
 [node name="Map" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
-custom_minimum_size = Vector2(11, 17)
+custom_minimum_size = Vector2(10, 17)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
@@ -1670,8 +1671,20 @@ tooltip_text = "Map"
 icon = ExtResource("30_editor_map")
 expand_icon = true
 
+[node name="Sfx" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
+custom_minimum_size = Vector2(10, 17)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+tooltip_text = "SFX"
+icon = ExtResource("32_editor_sfx")
+expand_icon = true
+
 [node name="Music" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
-custom_minimum_size = Vector2(11, 17)
+custom_minimum_size = Vector2(10, 17)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")

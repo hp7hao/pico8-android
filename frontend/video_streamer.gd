@@ -209,6 +209,7 @@ func _ready() -> void:
 		editor_actions.get_node("Code").pressed.connect(_on_editor_quick_action.bind("code"))
 		editor_actions.get_node("Sprite").pressed.connect(_on_editor_quick_action.bind("sprite"))
 		editor_actions.get_node("Map").pressed.connect(_on_editor_quick_action.bind("map"))
+		editor_actions.get_node("Sfx").pressed.connect(_on_editor_quick_action.bind("sfx"))
 		editor_actions.get_node("Music").pressed.connect(_on_editor_quick_action.bind("music"))
 		
 	KBMan.subscribe(_on_external_keyboard_change)
@@ -1159,6 +1160,7 @@ func _on_editor_quick_action(action: String) -> void:
 		"code": Vector2i(85, 4),
 		"sprite": Vector2i(95, 4),
 		"map": Vector2i(104, 4),
+		"sfx": Vector2i(113, 4),
 		"music": Vector2i(122, 4),
 	}
 	if tab_positions.has(action):
