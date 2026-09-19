@@ -7,7 +7,7 @@ enum ExecutionMode {PICO8, TELNETSSH}
 var pico_pid = null
 
 # Async Restart State Machine
-enum RestartState {IDLE, REQUESTED, SENDING_CTRL_DOWN, SENDING_Q_DOWN, SENDING_Q_UP, SENDING_CTRL_UP, WAITING_FOR_EXIT}
+enum RestartState {IDLE, REQUESTED, SENDING_CTRL_DOWN, SENDING_Q_DOWN, SENDING_Q_UP, SENDING_CTRL_UP, WAITING_FOR_EXIT, RELAUNCHING}
 var restart_state: RestartState = RestartState.IDLE
 var pending_restart_path: String = ""
 var state_timer: int = 0
@@ -432,27 +432,35 @@ func _process(_delta: float) -> void:
 				state_timer = Time.get_ticks_msec()
 
 		RestartState.WAITING_FOR_EXIT:
-			# Step 5: Wait for process to die
+			# Step 5: Wait for process to die.
 			if not pico_pid or not OS.is_process_running(pico_pid):
 				print("Process quit gracefully!")
+				restart_state = RestartState.RELAUNCHING
 				_complete_restart()
 			elif (Time.get_ticks_msec() - state_timer) > 3000:
 				print("Graceful quit timed out. Proceeding anyway.")
-				# _kill_all_pico_processes() # Disabled per user request
+				restart_state = RestartState.RELAUNCHING
 				_complete_restart()
 
+		RestartState.RELAUNCHING:
+			pass
+
 func _complete_restart() -> void:
-	# Force cleanup of any lingering processes (even if graceful quit worked, clean up zombies)
+	# Force cleanup of any lingering processes (even if graceful quit worked, clean up zombies).
 	_kill_all_pico_processes()
 	pico_pid = null
 
-	# Cleanup temp files that might block restart (PID files, sockets)
+	# Cleanup temp files that might block restart (PID files, sockets).
 	var pkg_path = PicoBootManager.APPDATA_FOLDER + "/package"
 	var rm_cmd = "rm -rf " + pkg_path + "/ptmp/*; " + \
 				 "find " + pkg_path + "/tmp/ -mindepth 1 -not -name 'xdgopen' -exec rm -rf {} +"
 	OS.execute(PicoBootManager.BIN_PATH + "/sh", ["-c", rm_cmd], [])
 
-	# Final Step: Launch new process
+	# Android releases process and FIFO descriptors asynchronously. Starting the
+	# replacement immediately can connect it to teardown-era handles and leave a
+	# static first frame. Keep the wrapper alive but let native teardown settle.
+	await get_tree().create_timer(0.75).timeout
+
 	print("Launching new PICO-8 instance: ", pending_restart_path)
 	_launch_pico8(pending_restart_path)
 	restart_state = RestartState.IDLE
