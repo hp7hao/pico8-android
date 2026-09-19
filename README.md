@@ -61,10 +61,24 @@ This fork introduces several enhancements to improve the experience on Android d
 
 ## 🛠️ Building
 ### Godot Frontend
-1. Download [Godot](https://godotengine.org) version ≥4.6.
-2. Put `package.dat` from Releases in the project ~~or build it from bootstrap/ (soon)~~; this is the bootstrap package and is pretty essential
-3. In Godot, **Project > Install Android Build Template**
-4. then just do the normal **Project > Export**
+
+The repeatable debug-build path is:
+
+1. Install Godot ≥4.7, its matching export templates, Android SDK build tools, and JDK 17. In Godot's editor settings, set the Android SDK and Java SDK paths.
+2. Put the matching release's `package.dat` in `frontend/`. It can be recovered from a release APK without unpacking any user-owned PICO-8 files:
+   ```bash
+   unzip -p /path/to/pico8-frontend.apk assets/package.dat > frontend/package.dat
+   ```
+3. Run the isolated build helper from the repository root:
+   ```bash
+   JAVA_HOME=/usr/lib/jvm/java-17-openjdk \
+   ANDROID_HOME=/opt/android-sdk \
+   scripts/build-android-debug.sh /path/to/pico8-frontend-debug.apk
+   ```
+
+The helper copies the frontend into a temporary directory, installs the matching `android_source.zip` there, and exports the APK without rewriting tracked Godot import metadata. The Android export preset uses minimum SDK 28, matching the documented Android 9 baseline.
+
+The default audio backend is SLES. On affected Android vendor stacks—including Titan 2, where the required legacy `libgralloc_extra_sys.so` dependency is excluded from the app linker namespace—the app automatically uses the existing TCP-stream backend instead; otherwise the SLES PulseAudio module loads but produces no speaker output.
 
 
 

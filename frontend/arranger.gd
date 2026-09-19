@@ -35,6 +35,8 @@ var zoom_repeat_delay: float = 0.0
 const ZOOM_REPEAT_INITIAL_DELAY = 0.4
 const ZOOM_REPEAT_MIN_DELAY = 0.02
 const ZOOM_REPEAT_ACCEL = 0.8
+const PORTRAIT_DISPLAY_TOP = 4.0
+const PORTRAIT_MAX_INTEGER_SCALE = 8.0
 
 signal layout_updated()
 
@@ -142,10 +144,14 @@ func _setup_intent_listener():
 			_on_intent_session_started()
 
 func _on_intent_session_started():
-	# 1. Patch Gaming Keyboard (Node: 'esc')
+	# Direct-launch sessions reuse the single center system-button slot for exit.
 	var gaming_esc = get_node_or_null("kbanchor/kb_gaming/Escape")
+	var gaming_pause = get_node_or_null("kbanchor/kb_gaming/Pause")
 	if gaming_esc:
 		_patch_exit_button(gaming_esc)
+		gaming_esc.visible = true
+	if gaming_pause:
+		gaming_pause.visible = false
 
 func _patch_exit_button(btn: Control):
 	# Load Power Icon (if not already loaded globally, load locally)
@@ -369,6 +375,11 @@ func _update_layout(force_kb_height: int = -1):
 		var ratio_x = available_size.x / target_size.x
 		var ratio_y = available_size.y / target_size.y
 		raw_scale = min(ratio_x, ratio_y)
+
+	# Leave a larger dedicated touch deck on square portrait phones instead of
+	# consuming all available height with a 9x game viewport.
+	if not is_landscape and display_container:
+		raw_scale = min(raw_scale, PORTRAIT_MAX_INTEGER_SCALE)
 		
 	if PicoVideoStreamer.get_integer_scaling_enabled():
 		baselineScale = max(1.0, floor(raw_scale))
@@ -400,7 +411,8 @@ func _update_layout(force_kb_height: int = -1):
 	var dpad = get_node_or_null("kbanchor/kb_gaming/dpad")
 	if dpad:
 		var saved_scale = PicoVideoStreamer.get_control_scale(dpad.name, is_landscape)
-		dpad.scale = Vector2(saved_scale, saved_scale)
+		var base_scale = dpad.original_scale if "original_scale" in dpad else Vector2.ONE
+		dpad.scale = base_scale * saved_scale
 
 	if auto_show and not visible:
 		visible = true
@@ -420,8 +432,8 @@ func _update_layout(force_kb_height: int = -1):
 		else:
 			var content_height = target_size.y * maxScale
 			var arr_y = (screensize.y - content_height) / 2 if center_y else 0
-			# Target size is 128y. Display starts at 12y local. So it's arr_y + 12*maxScale + 128*zoomScale
-			screen_bottom = arr_y + (12 * maxScale) + (128 * zoomScale) + actual_drag_y + overlap_padding
+			# The portrait display sits above the dedicated touch-control deck.
+			screen_bottom = arr_y + (PORTRAIT_DISPLAY_TOP * maxScale) + (128 * zoomScale) + actual_drag_y + overlap_padding
 		
 		if screen_bottom > (screensize.y - real_kb_h):
 			kb_height = 64
@@ -512,7 +524,7 @@ func _update_layout(force_kb_height: int = -1):
 		# 1. Calculate Pure Baseline Position (where the display is with ZERO drag and NO keyboard shift)
 		var pure_target_y_base = 0
 		if not is_landscape:
-			pure_target_y_base = 12
+			pure_target_y_base = PORTRAIT_DISPLAY_TOP
 			
 		var pure_baseline_global: Vector2
 		if is_landscape:

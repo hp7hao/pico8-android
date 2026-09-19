@@ -26,7 +26,7 @@ by @unmatchedbracket"
 config/version="1.6.6"
 run/main_scene="uid://clwlaw414wfp8"
 config/quit_on_go_back=false
-config/features=PackedStringArray("4.6", "Mobile")
+config/features=PackedStringArray("4.7", "Mobile")
 boot_splash/bg_color=Color(0.00784314, 0.0156863, 0.0235294, 1)
 boot_splash/use_filter=false
 boot_splash/image="uid://c3dqg0oq8wp1"

@@ -217,20 +217,21 @@ zoom_inner_container = NodePath("../OverlayUI/LayoutControls/ZoomControl")
 [node name="ActiveArea" type="ReferenceRect" parent="Arranger" unique_id=148468915]
 layout_mode = 0
 offset_right = 128.0
-offset_bottom = 300.0
+offset_bottom = 176.0
 mouse_filter = 2
 border_color = Color(0.195284, 0.551135, 0.869855, 1)
 
 [node name="displayContainer" type="Sprite2D" parent="Arranger" unique_id=699366111]
 texture_filter = 1
-position = Vector2(0, 12)
+position = Vector2(0, 4)
 texture = SubResource("ViewportTexture_7dm0k")
 centered = false
 
 [node name="kbanchor" type="Node2D" parent="Arranger" unique_id=2040893376]
-position = Vector2(0, 300)
+position = Vector2(0, 160)
 
 [node name="Keyboard Btn" type="Button" parent="Arranger/kbanchor" unique_id=585888594]
+visible = false
 offset_top = -149.0
 offset_right = 18.0
 offset_bottom = -131.0
@@ -244,10 +245,10 @@ script = ExtResource("171_repo")
 
 [node name="AudioBtn" type="Button" parent="Arranger/kbanchor" unique_id=2130156724]
 unique_name_in_owner = true
-offset_left = 109.0
-offset_top = -149.0
-offset_right = 127.0
-offset_bottom = -131.0
+offset_left = -20.0
+offset_top = -156.0
+offset_right = -2.0
+offset_bottom = -138.0
 focus_mode = 0
 theme_override_font_sizes/font_size = 10
 theme_override_styles/focus = SubResource("StyleBoxEmpty_d13ii")
@@ -1507,23 +1508,26 @@ metadata/_edit_use_anchors_ = true
 [node name="kb_gaming" type="Control" parent="Arranger/kbanchor" unique_id=1882534109]
 layout_mode = 3
 anchors_preset = 0
-offset_top = -126.0
-offset_bottom = -126.0
+offset_top = -28.0
+offset_bottom = -28.0
 script = ExtResource("37_come4")
 type = 0
 is_repositionable = false
 
 [node name="Pico8LogoVector" type="Sprite2D" parent="Arranger/kbanchor/kb_gaming" unique_id=185300059]
+visible = false
 position = Vector2(65, 110)
 scale = Vector2(0.21, 0.21)
 texture = ExtResource("23_1u8w0")
 
 [node name="Escape" parent="Arranger/kbanchor/kb_gaming" unique_id=767368110 instance=ExtResource("20_82xsv")]
+visible = false
 layout_mode = 0
-offset_left = 76.0
-offset_top = 4.0
-offset_right = 98.0
-offset_bottom = 14.0
+offset_left = 53.0
+offset_top = 18.0
+offset_right = 75.0
+offset_bottom = 28.0
+scale = Vector2(0.95, 0.95)
 texture = ExtResource("47_esc_norm")
 key_id = "Escape"
 cap_text = "eSC"
@@ -1535,10 +1539,11 @@ metadata/_edit_use_anchors_ = true
 
 [node name="Pause" parent="Arranger/kbanchor/kb_gaming" unique_id=491652354 instance=ExtResource("20_82xsv")]
 layout_mode = 0
-offset_left = 103.0
-offset_top = 4.0
-offset_right = 125.0
-offset_bottom = 14.0
+offset_left = 53.0
+offset_top = 18.0
+offset_right = 75.0
+offset_bottom = 28.0
+scale = Vector2(0.95, 0.95)
 texture = ExtResource("49_menu_norm")
 key_id = "P"
 cap_text = "pAUSE"
@@ -1550,10 +1555,11 @@ metadata/_edit_use_anchors_ = true
 
 [node name="O" parent="Arranger/kbanchor/kb_gaming" unique_id=2134662063 instance=ExtResource("20_82xsv")]
 layout_mode = 0
-offset_left = 104.0
-offset_top = 24.0
-offset_right = 126.0
-offset_bottom = 46.0
+offset_left = 120.0
+offset_top = 10.0
+offset_right = 142.0
+offset_bottom = 32.0
+scale = Vector2(0.95, 0.95)
 texture = ExtResource("45_o_norm")
 key_id = "Z"
 cap_type = 1
@@ -1566,10 +1572,11 @@ metadata/_edit_use_anchors_ = true
 
 [node name="X" parent="Arranger/kbanchor/kb_gaming" unique_id=1932826476 instance=ExtResource("20_82xsv")]
 layout_mode = 0
-offset_left = 76.0
-offset_top = 40.0
-offset_right = 98.0
-offset_bottom = 62.0
+offset_left = 95.0
+offset_top = 23.0
+offset_right = 117.0
+offset_bottom = 45.0
+scale = Vector2(0.95, 0.95)
 texture = ExtResource("43_x_norm")
 key_id = "X"
 cap_type = 1
@@ -1582,10 +1589,11 @@ metadata/_edit_use_anchors_ = true
 
 [node name="dpad" parent="Arranger/kbanchor/kb_gaming" unique_id=827209010 instance=ExtResource("41_0cp0l")]
 layout_mode = 0
-offset_left = 3.0
-offset_top = 4.0
-offset_right = 51.0
-offset_bottom = 52.0
+offset_left = -12.0
+offset_top = 2.0
+offset_right = 32.0
+offset_bottom = 46.0
+scale = Vector2(0.95, 0.95)
 expand_mode = 1
 metadata/_edit_use_anchors_ = true
 

@@ -30,18 +30,32 @@ static func set_setting(section: String, key: String, value: Variant) -> void:
 
 # Special Accessor for Audio Backend with Logic Override
 static func get_audio_backend() -> String:
-	# 1. Check for Forced Override (External Storage)
+	# 1. Check for runtime compatibility overrides.
 	if is_audio_backend_forced():
 		print("PicoBootManager: Audio Backend FORCED to 'stream'")
 		return "stream"
 	
-	# 2. Return User Setting (Default to 'sles' if not set)
+	# 2. Return User Setting (Default to 'sles' if not set).
 	return get_setting("settings", "audio_backend", "sles")
 
 static func is_audio_backend_forced() -> bool:
-	# Check for External Storage path
+	# Adoptable storage requires the path-independent TCP stream backend.
 	if OS.get_user_data_dir().begins_with("/mnt/expand"):
 		return true
+
+	# Some Android vendor stacks expose libgpud_sys without its legacy
+	# libgralloc_extra_sys dependency. The bundled SLES PulseAudio module then
+	# fails to load and silently produces no speaker output. TCP stream avoids
+	# that native dependency while retaining the same PICO-8 audio source.
+	if OS.get_name() == "Android":
+		var has_gpud = FileAccess.file_exists("/system_ext/lib64/libgpud_sys.so")
+		var has_gralloc_extra = FileAccess.file_exists("/system_ext/lib64/libgralloc_extra_sys.so")
+		var is_titan_2 = OS.get_model_name().strip_edges().to_lower() == "titan 2"
+		# Titan 2 ships the file but excludes it from the app linker namespace,
+		# so existence alone cannot prove that the SLES module can resolve it.
+		if is_titan_2 or (has_gpud and not has_gralloc_extra):
+			print("PicoBootManager: SLES vendor dependency unavailable; using TCP stream audio")
+			return true
 	return false
 # --------------------------------
 

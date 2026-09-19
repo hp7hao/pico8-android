@@ -20,9 +20,12 @@ var initial_pinch_dist = 0.0
 var initial_scale_modifier = 1.0
 
 const CustomControlTextures = preload("res://custom_control_textures.gd")
+const DPAD_DEADZONE_RATIO = 0.12
 
-# Track if press effect is enabled (for custom textures without pressed variant)
+# Custom texture themes retain their directional highlight treatment. The
+# default control is drawn as a minimal circular four-button D-pad.
 var has_press_effect: bool = true
+var use_minimal_visual: bool = false
 
 
 func _ready() -> void:
@@ -57,10 +60,41 @@ func _ready() -> void:
 	scale = original_scale * saved_scale
 	
 	# --- Custom Texture Loading ---
-	# Load default sprites logic initially
 	if not _load_and_apply_custom_textures(is_landscape):
-		# Setup default sprites if no custom texture
-		_setup_dpad_sprites(lit_texture)
+		_enable_minimal_visual()
+
+func _enable_minimal_visual():
+	use_minimal_visual = true
+	has_press_effect = false
+	for direction in [%Up, %Down, %Left, %Right]:
+		direction.visible = false
+	queue_redraw()
+
+func _draw() -> void:
+	if not use_minimal_visual:
+		return
+	var radius = min(size.x, size.y) * 0.48
+	var button_radius = radius * 0.27
+	var button_offset = radius * 0.57
+	var border_width = max(1.25, radius * 0.055)
+	var idle_fill = Color(0.27, 0.25, 0.34, 0.98)
+	var active_fill = Color(0.68, 0.64, 0.96, 1.0)
+	var outline = Color(0.55, 0.49, 0.82, 1.0)
+	var active_outline = Color(0.90, 0.87, 1.0, 1.0)
+	var directions = [
+		[Vector2(0, -button_offset), current_dir.y == 0],
+		[Vector2(0, button_offset), current_dir.y == 2],
+		[Vector2(-button_offset, 0), current_dir.x == 0],
+		[Vector2(button_offset, 0), current_dir.x == 2],
+	]
+	draw_circle(center_offset, radius, Color(0.12, 0.11, 0.16, 0.92))
+	draw_arc(center_offset, radius, 0.0, TAU, 64, outline, border_width, true)
+	for item in directions:
+		var button_center: Vector2 = center_offset + item[0]
+		var active: bool = item[1]
+		draw_circle(button_center, button_radius, active_fill if active else idle_fill)
+		draw_arc(button_center, button_radius, 0.0, TAU, 40, active_outline if active else outline, border_width, true)
+	draw_circle(center_offset, button_radius * 0.58, Color(0.16, 0.14, 0.21, 1.0))
 
 func reload_textures():
 	var is_landscape = _is_in_landscape_ui()
@@ -69,13 +103,13 @@ func reload_textures():
 	lit_texture = preload("res://assets/dpad_lit.png")
 	self.texture = default_texture
 	has_press_effect = true
+	use_minimal_visual = false
 	
 	# Try Load Custom
 	if not _load_and_apply_custom_textures(is_landscape):
 		var saved_scale = PicoVideoStreamer.get_control_scale(name, is_landscape)
 		scale = original_scale * saved_scale
-		
-		_setup_dpad_sprites(lit_texture)
+		_enable_minimal_visual()
 		z_index = 0 # Default z-index? Or whatever it was.
 
 func reload_layout():
@@ -223,6 +257,9 @@ func update_dir(new_dir: Vector2i):
 	update_visuals(new_dir)
 
 func update_visuals(dir: Vector2i):
+	if use_minimal_visual:
+		queue_redraw()
+		return
 	# Only update visuals if press effect is enabled
 	if has_press_effect:
 		# Center is (1,1)
@@ -267,7 +304,7 @@ func _gui_input(event: InputEvent) -> void:
 			update_dir(Vector2i.ONE)
 		else:
 			var vec: Vector2 = event.position - center_offset
-			var threshold = SHIFT.x * 0.4
+			var threshold = min(size.x, size.y) * DPAD_DEADZONE_RATIO
 			
 			# 1. Deadzone Check
 			if vec.length() < threshold:

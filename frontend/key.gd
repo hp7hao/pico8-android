@@ -357,6 +357,8 @@ func _process(_delta: float) -> void:
 
 func _update_visuals() -> void:
 	var shift_held = last_shift_state
+	if _get_texture_name_for_button() != "":
+		self_modulate = Color(1.28, 1.28, 1.28, 1.0) if key_state != KeyState.RELEASED else Color.WHITE
 	
 	# Update Text
 	if shift_held:
