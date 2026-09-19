@@ -23,6 +23,7 @@ var _applinks_plugin = null
 # TCP Threading
 var _thread: Thread
 var _mutex: Mutex
+var _input_pipe_mutex: Mutex
 var _thread_active: bool = false
 var _reset_requested: bool = false
 var _input_queue: Array = []
@@ -180,6 +181,7 @@ func _ready() -> void:
 
 	# Start TCP Thread
 	_mutex = Mutex.new()
+	_input_pipe_mutex = Mutex.new()
 	_thread = Thread.new()
 	_thread_active = true
 	_thread.start(_thread_function)
@@ -347,8 +349,10 @@ func _thread_function():
 
 				if in_pipe_id != -1:
 					print("Pipe Thread: Reset - Closing Input Pipe ", in_pipe_id)
+					_input_pipe_mutex.lock()
 					_applinks_plugin.pipe_close(in_pipe_id)
 					in_pipe_id = -1
+					_input_pipe_mutex.unlock()
 			
 			if _mutex:
 				_mutex.lock()
@@ -380,7 +384,9 @@ func _thread_function():
 					var pid = -1
 					# Double check validity inside thread loop
 					if is_instance_valid(_applinks_plugin) and _applinks_plugin:
+						_input_pipe_mutex.lock()
 						pid = _applinks_plugin.pipe_open(PIPE_IN, 1) # Mode 1 = WRITE
+						_input_pipe_mutex.unlock()
 					else:
 						# Plugin lost?
 						_thread_active = false
@@ -418,53 +424,11 @@ func _thread_function():
 			if not pipes_connected:
 				continue
 		
-		# Connected
+		# Connected. Input writes run on the main thread so they are not gated by
+		# this thread's blocking 30 fps video read.
 		loading.call_deferred("set_visible", false)
-		
-		# 1. Send Inputs
-		_mutex.lock()
-		var inputs = _input_queue.duplicate()
-		_input_queue.clear()
-		_mutex.unlock()
-		
-		if inputs.size() > 0:
-			var failed_index = -1
-			var key_written = 0
-			var newly_pending: Array = []
-			for i in range(inputs.size()):
-				var pba = PackedByteArray(inputs[i])
-				if _applinks_plugin:
-					var ok = _applinks_plugin.pipe_write(in_pipe_id, pba)
-					if not ok:
-						failed_index = i
-						break
-					if inputs[i][0] != PIDOT_EVENT_MOUSEEV:
-						key_written += 1
-						newly_pending.append(inputs[i])
-			# Track non-mouse packets awaiting ack so the watchdog can replay them on reset.
-			if newly_pending.size() > 0 and _mutex:
-				_mutex.lock()
-				_pending_acks.append_array(newly_pending)
-				_mutex.unlock()
 
-			if failed_index != -1:
-				# Writer is dead (Android 10 invalidated the fd across pause/resume).
-				# Requeue the failed packet + any unsent ones at the FRONT of the input
-				# queue so they replay in order once the pipe is reopened.
-				var unsent = inputs.slice(failed_index)
-				if _mutex:
-					_mutex.lock()
-					var combined = unsent.duplicate()
-					combined.append_array(_input_queue)
-					_input_queue = combined
-					_reset_requested = true
-					_pipe_reset_complete = false
-					if _process_restart_pending:
-						_connection_allowed = false
-					_mutex.unlock()
-				print("Pipe Thread: Input write failed — requeued ", unsent.size(), " packet(s), requesting reset")
-
-		# 2. Read Video
+		# Read Video
 		var chunk: PackedByteArray
 		if _applinks_plugin:
 			chunk = _applinks_plugin.pipe_read(vid_pipe_id, TOTAL_PACKET_SIZE)
@@ -653,6 +617,55 @@ func find_seq_pba(host: PackedByteArray, sub: PackedByteArray) -> int:
 var last_mouse_state = [0, 0, 0]
 var synched = false
 
+func _flush_input_queue_now() -> void:
+	if not _mutex or not _input_pipe_mutex or not _applinks_plugin:
+		return
+
+	var inputs: Array = []
+	var target_pipe_id = -1
+	_mutex.lock()
+	if _connection_allowed and in_pipe_id != -1 and not _input_queue.is_empty():
+		inputs = _input_queue.duplicate()
+		_input_queue.clear()
+		target_pipe_id = in_pipe_id
+	_mutex.unlock()
+	if inputs.is_empty() or target_pipe_id == -1:
+		return
+
+	var failed_index = -1
+	_input_pipe_mutex.lock()
+	for i in range(inputs.size()):
+		var tracks_ack = inputs[i][0] != PIDOT_EVENT_MOUSEEV
+		# Register before writing because the video thread can observe the shim's
+		# acknowledgement immediately after this call returns.
+		if tracks_ack:
+			_mutex.lock()
+			_pending_acks.append(inputs[i])
+			_mutex.unlock()
+		var ok = _applinks_plugin.pipe_write(target_pipe_id, PackedByteArray(inputs[i]))
+		if not ok:
+			if tracks_ack:
+				_mutex.lock()
+				_pending_acks.erase(inputs[i])
+				_mutex.unlock()
+			failed_index = i
+			break
+	_input_pipe_mutex.unlock()
+
+	_mutex.lock()
+	if failed_index != -1:
+		var unsent = inputs.slice(failed_index)
+		var combined = unsent.duplicate()
+		combined.append_array(_input_queue)
+		_input_queue = combined
+		_reset_requested = true
+		_pipe_reset_complete = false
+		if _process_restart_pending:
+			_connection_allowed = false
+	_mutex.unlock()
+	if failed_index != -1:
+		print("Input write failed — requeued ", inputs.size() - failed_index, " packet(s), requesting reset")
+
 func _process(delta: float) -> void:
 	var editor_actions = get_node_or_null("Arranger/kbanchor/kb_gaming/EditorQuickActions")
 	if editor_actions:
@@ -828,6 +841,7 @@ func _process(delta: float) -> void:
 			_input_queue.append_array(_main_thread_input_buffer)
 			_mutex.unlock()
 		_main_thread_input_buffer.clear()
+	_flush_input_queue_now()
 	
 	# METRICS UPDATE
 	if metrics_visible:

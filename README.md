@@ -37,6 +37,7 @@ This fork introduces several enhancements to improve the experience on Android d
 
 *   **Landscape Mode:** Optimized UI and display for landscape orientation.
 *   **Controller Support:** Full support for external game controllers.
+*   **Low-Latency Touch Input:** Virtual controls and mouse input write independently of the blocking video-read loop, so input delivery is not delayed by the 30 FPS framebuffer cadence.
 *   **Android Handheld Support:** Tested and verified on devices like the **RG Cube**.
 *   **Virtual Keyboard:** Access the Android keyboard at any time by sliding up from the bottom of the screen.
 *   **Splore / Command Toggle:** Relaunch only the PICO-8 child between Splore and the default command prompt through a graceful quit with bounded force-cleanup, without changing the cold-start preference.
