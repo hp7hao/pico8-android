@@ -208,6 +208,7 @@ func _ready() -> void:
 	var editor_actions = get_node_or_null("Arranger/kbanchor/kb_gaming/EditorQuickActions")
 	if editor_actions:
 		editor_actions.get_node("Escape").pressed.connect(_on_editor_quick_action.bind("escape"))
+		editor_actions.get_node("Tab").pressed.connect(_on_editor_quick_action.bind("tab"))
 		editor_actions.get_node("Code").pressed.connect(_on_editor_quick_action.bind("code"))
 		editor_actions.get_node("Sprite").pressed.connect(_on_editor_quick_action.bind("sprite"))
 		editor_actions.get_node("Map").pressed.connect(_on_editor_quick_action.bind("map"))
@@ -1148,8 +1149,8 @@ func _on_editor_quick_action(action: String) -> void:
 		return
 	_editor_shortcut_active = true
 
-	if action == "escape":
-		await _tap_pico_key("Escape")
+	if action == "escape" or action == "tab":
+		await _tap_pico_key("Escape" if action == "escape" else "Tab")
 		_editor_shortcut_active = false
 		return
 
