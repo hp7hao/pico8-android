@@ -1178,16 +1178,26 @@ func _on_editor_quick_action(action: String) -> void:
 		return
 	await get_tree().create_timer(0.2).timeout
 
-	var tab_positions = {
-		"code": Vector2i(85, 4),
-		"sprite": Vector2i(95, 4),
-		"map": Vector2i(104, 4),
-		"sfx": Vector2i(113, 4),
-		"music": Vector2i(122, 4),
+	var editor_states = {
+		"code": 1,
+		"sprite": 2,
+		"map": 3,
+		"sfx": 4,
+		"music": 5,
 	}
-	if tab_positions.has(action):
-		print("Activating PICO-8 editor tab: ", action)
-		await _send_pico_ui_click(tab_positions[action])
+	if editor_states.has(action):
+		var target_state: int = editor_states[action]
+		var switch_deadline := Time.get_ticks_msec() + 2000
+		print("Activating PICO-8 editor tab via keyboard shortcut: ", action)
+		while raw_master_state != target_state and Time.get_ticks_msec() < switch_deadline:
+			if raw_master_state < 1 or raw_master_state > editor_states.size():
+				push_error("Unexpected PICO-8 editor state: " + str(raw_master_state))
+				break
+			var steps_right: int = (target_state - raw_master_state + editor_states.size()) % editor_states.size()
+			await _tap_pico_alt_shortcut("Right" if steps_right <= 2 else "Left")
+			await get_tree().create_timer(0.05).timeout
+		if raw_master_state != target_state:
+			push_error("Editor shortcut timed out: " + action)
 	_editor_shortcut_active = false
 
 func _tap_pico_key(key_id: String) -> void:
@@ -1202,28 +1212,12 @@ func _tap_pico_ctrl_shortcut(key_id: String) -> void:
 	vkb_setstate(key_id, false)
 	vkb_setstate("Ctrl", false)
 
-func _send_pico_ui_click(position: Vector2i) -> void:
-	if not _mutex:
-		return
-	# Keep button-down visible for several PICO-8 polls. Enqueuing down and up
-	# together can be consumed before SDL_GetMouseState observes the press.
-	# Move both cursor models as well so the regular per-frame input projection
-	# does not immediately overwrite this synthetic click with the old position.
-	virtual_cursor_pos = Vector2(position)
-	current_screen_pos = position
-	current_mouse_mask = 1
-	_mutex.lock()
-	_input_queue.append([PIDOT_EVENT_MOUSEEV, position.x, position.y, 1, 0, 0, 0, 0])
-	_mutex.unlock()
-	last_mouse_state = [position.x, position.y, 1]
-	await get_tree().create_timer(0.12).timeout
-	if not _mutex:
-		return
-	current_mouse_mask = 0
-	_mutex.lock()
-	_input_queue.append([PIDOT_EVENT_MOUSEEV, position.x, position.y, 0, 0, 0, 0, 0])
-	_mutex.unlock()
-	last_mouse_state = [position.x, position.y, 0]
+func _tap_pico_alt_shortcut(key_id: String) -> void:
+	vkb_setstate("Alt", true)
+	vkb_setstate(key_id, true)
+	await get_tree().create_timer(0.08).timeout
+	vkb_setstate(key_id, false)
+	vkb_setstate("Alt", false)
 
 
 var quit_overlay: Control

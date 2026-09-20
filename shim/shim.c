@@ -399,7 +399,7 @@ void pico_send_vid_data() {
 
         // Gate memory reading behind version check to prevent reading garbage/crashing
         if (picoram != NULL && is_version_0_2_7) {
-            // DAT_00640554 (Editor screen index: 0=Code, 1=Sprite, 2=Map, 3=Sfx, 4=Music)
+            // DAT_00640554 (Editor screen index: 1=Code, 2=Sprite, 3=Map, 4=Sfx, 5=Music)
             master_state = picoram[0x255d4]; 
             state_enum = picoram[PICORAM_INDEX_STATE_TYPE];
             cart_loaded = picoram[PICORAM_INDEX_CART_LOADED];
