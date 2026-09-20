@@ -214,6 +214,8 @@ func _ready() -> void:
 		editor_actions.get_node("Map").pressed.connect(_on_editor_quick_action.bind("map"))
 		editor_actions.get_node("Sfx").pressed.connect(_on_editor_quick_action.bind("sfx"))
 		editor_actions.get_node("Music").pressed.connect(_on_editor_quick_action.bind("music"))
+		editor_actions.get_node("Save").pressed.connect(_on_editor_quick_action.bind("save"))
+		editor_actions.get_node("Run").pressed.connect(_on_editor_quick_action.bind("run"))
 		
 	KBMan.subscribe(_on_external_keyboard_change)
 	
@@ -1154,6 +1156,11 @@ func _on_editor_quick_action(action: String) -> void:
 		_editor_shortcut_active = false
 		return
 
+	if action == "save" or action == "run":
+		await _tap_pico_ctrl_shortcut("S" if action == "save" else "R")
+		_editor_shortcut_active = false
+		return
+
 	if (current_navstate & 0x01) == 0:
 		await _tap_pico_key("Escape")
 		# From command mode one Escape enters the editor. From a running cart,
@@ -1187,6 +1194,13 @@ func _tap_pico_key(key_id: String) -> void:
 	vkb_setstate(key_id, true)
 	await get_tree().create_timer(0.08).timeout
 	vkb_setstate(key_id, false)
+
+func _tap_pico_ctrl_shortcut(key_id: String) -> void:
+	vkb_setstate("Ctrl", true)
+	vkb_setstate(key_id, true)
+	await get_tree().create_timer(0.08).timeout
+	vkb_setstate(key_id, false)
+	vkb_setstate("Ctrl", false)
 
 func _send_pico_ui_click(position: Vector2i) -> void:
 	if not _mutex:

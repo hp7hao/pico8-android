@@ -32,6 +32,8 @@
 [ext_resource type="Texture2D" path="res://assets/editor_music.svg" id="31_editor_music"]
 [ext_resource type="Texture2D" path="res://assets/editor_sfx.svg" id="32_editor_sfx"]
 [ext_resource type="Texture2D" path="res://assets/editor_tab.svg" id="33_editor_tab"]
+[ext_resource type="Texture2D" path="res://assets/editor_save.svg" id="34_editor_save"]
+[ext_resource type="Texture2D" path="res://assets/editor_run.svg" id="35_editor_run"]
 [ext_resource type="Script" uid="uid://3yarkysfetgu" path="res://kb_toggler.gd" id="37_come4"]
 [ext_resource type="PackedScene" uid="uid://bgklhpsaac82q" path="res://dpad.tscn" id="41_0cp0l"]
 [ext_resource type="Script" uid="uid://c7rts7fcblaav" path="res://run_pico_cmd.gd" id="41_4lmeg"]
@@ -1626,38 +1628,14 @@ theme_override_constants/h_separation = 1
 theme_override_constants/v_separation = 1
 columns = 5
 
-[node name="Escape" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
-custom_minimum_size = Vector2(12, 9)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
-theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
-theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
-tooltip_text = "Escape"
-icon = ExtResource("27_editor_escape")
-expand_icon = true
-
-[node name="Tab" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
-custom_minimum_size = Vector2(12, 9)
-layout_mode = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
-theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
-theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
-tooltip_text = "Tab"
-icon = ExtResource("33_editor_tab")
-expand_icon = true
-
 [node name="Code" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
 custom_minimum_size = Vector2(12, 9)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
-theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
-theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick")
 tooltip_text = "Code"
 icon = ExtResource("28_editor_code")
 expand_icon = true
@@ -1667,9 +1645,9 @@ custom_minimum_size = Vector2(12, 9)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
-theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
-theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick")
 tooltip_text = "Sprite"
 icon = ExtResource("29_editor_sprite")
 expand_icon = true
@@ -1679,9 +1657,9 @@ custom_minimum_size = Vector2(12, 9)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
-theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
-theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick")
 tooltip_text = "Map"
 icon = ExtResource("30_editor_map")
 expand_icon = true
@@ -1691,9 +1669,9 @@ custom_minimum_size = Vector2(12, 9)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
-theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
-theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick")
 tooltip_text = "SFX"
 icon = ExtResource("32_editor_sfx")
 expand_icon = true
@@ -1703,11 +1681,59 @@ custom_minimum_size = Vector2(12, 9)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
-theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
-theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick")
 tooltip_text = "Music"
 icon = ExtResource("31_editor_music")
+expand_icon = true
+
+[node name="Escape" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
+custom_minimum_size = Vector2(12, 9)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick")
+tooltip_text = "Escape"
+icon = ExtResource("27_editor_escape")
+expand_icon = true
+
+[node name="Tab" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
+custom_minimum_size = Vector2(12, 9)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick")
+tooltip_text = "Tab"
+icon = ExtResource("33_editor_tab")
+expand_icon = true
+
+[node name="Save" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
+custom_minimum_size = Vector2(12, 9)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick")
+tooltip_text = "Save current cartridge"
+icon = ExtResource("34_editor_save")
+expand_icon = true
+
+[node name="Run" type="Button" parent="Arranger/kbanchor/kb_gaming/EditorQuickActions"]
+custom_minimum_size = Vector2(12, 9)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/hover = SubResource("StyleBoxFlat_editor_quick")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_editor_quick_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_editor_quick")
+tooltip_text = "Run current cartridge"
+icon = ExtResource("35_editor_run")
 expand_icon = true
 
 [node name="O" parent="Arranger/kbanchor/kb_gaming" unique_id=2134662063 instance=ExtResource("20_82xsv")]
