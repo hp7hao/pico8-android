@@ -44,7 +44,7 @@ window/handheld/orientation=6
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/AndroidFilePicker/plugin.cfg", "res://addons/applinks/plugin.cfg")
+enabled=PackedStringArray("res://addons/AndroidFilePicker/plugin.cfg", "res://addons/applinks/plugin.cfg", "res://addons/manual_browser/plugin.cfg")
 
 [gui]
 

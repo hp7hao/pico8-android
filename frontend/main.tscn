@@ -34,7 +34,9 @@
 [ext_resource type="Texture2D" path="res://assets/editor_tab.svg" id="33_editor_tab"]
 [ext_resource type="Texture2D" path="res://assets/editor_save.svg" id="34_editor_save"]
 [ext_resource type="Texture2D" path="res://assets/editor_run.svg" id="35_editor_run"]
+[ext_resource type="Texture2D" path="res://assets/manual.svg" id="36_manual_icon"]
 [ext_resource type="Script" uid="uid://3yarkysfetgu" path="res://kb_toggler.gd" id="37_come4"]
+[ext_resource type="Script" path="res://manual_browser.gd" id="38_manual_script"]
 [ext_resource type="PackedScene" uid="uid://bgklhpsaac82q" path="res://dpad.tscn" id="41_0cp0l"]
 [ext_resource type="Script" uid="uid://c7rts7fcblaav" path="res://run_pico_cmd.gd" id="41_4lmeg"]
 [ext_resource type="PackedScene" uid="uid://dgbacxvbwjfsh" path="res://landscape_ui.tscn" id="42_land"]
@@ -222,6 +224,9 @@ script = ExtResource("41_4lmeg")
 
 [node name="OptionsMenu" parent="." unique_id=2098910583 instance=ExtResource("170_options")]
 
+[node name="ManualBrowser" type="Node" parent="."]
+script = ExtResource("38_manual_script")
+
 [node name="Display" type="SubViewport" parent="." unique_id=1020317140]
 handle_input_locally = false
 size = Vector2i(128, 128)
@@ -317,6 +322,19 @@ focus_mode = 0
 theme_override_styles/focus = SubResource("StyleBoxEmpty_d13ii")
 tooltip_text = "My Projects"
 icon = ExtResource("26_projects")
+expand_icon = true
+script = ExtResource("171_repo")
+
+[node name="ManualBtn" type="Button" parent="Arranger/kbanchor"]
+unique_name_in_owner = true
+offset_left = -20.0
+offset_top = -96.0
+offset_right = -2.0
+offset_bottom = -78.0
+focus_mode = 0
+theme_override_styles/focus = SubResource("StyleBoxEmpty_d13ii")
+tooltip_text = "PICO-8 Manual"
+icon = ExtResource("36_manual_icon")
 expand_icon = true
 script = ExtResource("171_repo")
 

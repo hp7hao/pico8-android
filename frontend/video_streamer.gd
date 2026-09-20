@@ -205,6 +205,10 @@ func _ready() -> void:
 	if projects_btn:
 		projects_btn.pressed.connect(_on_projects_btn_pressed)
 
+	var manual_btn = get_node_or_null("Arranger/kbanchor/ManualBtn")
+	if manual_btn:
+		manual_btn.pressed.connect(_on_manual_btn_pressed)
+
 	var editor_actions = get_node_or_null("Arranger/kbanchor/kb_gaming/EditorQuickActions")
 	if editor_actions:
 		editor_actions.get_node("Escape").pressed.connect(_on_editor_quick_action.bind("escape"))
@@ -1145,6 +1149,11 @@ func _on_projects_btn_pressed():
 		return
 	var browser = project_browser_scene.instantiate()
 	get_tree().root.add_child(browser)
+
+func _on_manual_btn_pressed() -> void:
+	var manual_browser = get_node_or_null("ManualBrowser")
+	if manual_browser and manual_browser.has_method("open"):
+		manual_browser.open()
 
 func _on_editor_quick_action(action: String) -> void:
 	if _editor_shortcut_active or current_navstate == 0 or (current_navstate & 0x08) != 0:
