@@ -1,5 +1,9 @@
 # PICO-8 for Android
 
+In the GoIndie2 monorepo, the Titan 2 product-job authority is
+`projects/pico8-android/docs/specs/PICO8_ANDROID_SPEC.md`. This README remains
+user and wrapper documentation.
+
 This application is a specialized frontend for the Android platform that allows you to run and play with the original PICO-8 (specifically the Raspberry Pi build) on your Android device.
 
 **Note:** This application is a wrapper/launcher; it does **not** contain PICO-8 itself. You must provide your own legally purchased copy of the PICO-8 Raspberry Pi executable at the start of the application.
