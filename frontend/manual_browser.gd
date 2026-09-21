@@ -107,7 +107,6 @@ func _build_native_overlay() -> void:
 	_overlay.setBackgroundColor(AndroidColor.argb(170, 0, 0, 0))
 	_overlay.setClickable(true)
 	_overlay.setFocusable(true)
-	_overlay.setOnClickListener(_make_click_listener(Callable(self, "close")))
 
 	var panel = LinearLayout.LinearLayout(_activity)
 	panel.setOrientation(LinearLayout.VERTICAL)
@@ -117,6 +116,7 @@ func _build_native_overlay() -> void:
 	var header = LinearLayout.LinearLayout(_activity)
 	header.setOrientation(LinearLayout.HORIZONTAL)
 	header.setGravity(Gravity.CENTER_VERTICAL)
+	header.setBackgroundColor(AndroidColor.rgb(24, 24, 28))
 	var title = TextView.TextView(_activity)
 	title.setText("PICO-8 MANUAL")
 	title.setTextColor(AndroidColor.WHITE)
@@ -137,6 +137,7 @@ func _build_native_overlay() -> void:
 	var search_bar = LinearLayout.LinearLayout(_activity)
 	search_bar.setOrientation(LinearLayout.HORIZONTAL)
 	search_bar.setGravity(Gravity.CENTER_VERTICAL)
+	search_bar.setBackgroundColor(AndroidColor.rgb(24, 24, 28))
 	_search_input = EditText.EditText(_activity)
 	_search_input.setSingleLine(true)
 	_search_input.setHint("Search manual")
